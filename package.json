@@ -1,0 +1,27 @@
+{
+  "name": "socket",
+  "version": "1.0.0",
+  "description": "simple socket server",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.16.2",
+    "http": "0.0.0",
+    "moment": "^2.19.3",
+    "redis": "^2.8.0",
+    "socket.io": "^2.0.4",
+    "styleme": "^2.5.4"
+  },
+  "scripts": {
+    "dev": "nodemon src/index.js --exec babel-node src/index.js --presets env",
+    "build": "babel ./src -d dist --presets env",
+    "serve": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mix",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "nodemon": "^1.12.1"
+  }
+}
