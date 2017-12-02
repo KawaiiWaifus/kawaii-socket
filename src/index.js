@@ -1,7 +1,6 @@
 import {io, start, redis, readline, moment, st, log, debbug, redispass, pront, Debug} from './bootstrap'
 import { watch } from './bootstrap/socketWatch'
 import { command } from './bootstrap/command'
-import { setTimeout } from 'timers'
 
 start()
 

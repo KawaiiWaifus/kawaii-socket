@@ -1,3 +1,5 @@
+import { setTimeout } from 'timers'
+
 export const command = crazy => {
   const { io, rl, users, debbug } = crazy
     rl.on('line', (line) => {
