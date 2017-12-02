@@ -7,12 +7,13 @@ const app = require('express')()
 const server = require('http').Server(app)
 export const io = require('socket.io')(server)
 export const redis = require('redis')
+export const readline = require('readline')
 
 /**
  * CONFIGS
  */
 import { LogOn, port, version, Debug, serverName } from './config'
-export { redispass } from './config'
+export { redispass, pront, Debug } from './config'
 
 /**
  * DEBUGS
@@ -38,9 +39,9 @@ export const start = () => server.listen(port, () => {
   log(st.yel('Server') + ' on ' + st.yel('port') + ': ' + st.cya(port))
   log(st.yel('Server: ') + st.cya(serverName) + st.yel(' v' + version) + st.gre(' Started!'))
   if (Debug) {
-    log(st.gre('Mode ' + st.red('Debug ') + st.gre('ON!') ))
+    log(st.gre('Mode 🔥  ' + st.red('Debug ') + st.gre('ON!') ))
   }
   else {
-    log(st.gre('Mode ' + st.red('Debug ') + st.red('OFF!') ))
+    log(st.gre('Mode 🔥  ' + st.red('Debug ') + st.red('OFF!') ))
   }
 })

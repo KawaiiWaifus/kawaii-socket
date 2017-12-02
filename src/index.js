@@ -1,86 +1,53 @@
-import {io, start, redis, moment, st, log, debbug, redispass} from './bootstrap'
+import {io, start, redis, readline, moment, st, log, debbug, redispass, pront, Debug} from './bootstrap'
+import { watch } from './bootstrap/socketWatch'
+import { setTimeout } from 'timers'
 
 start()
 
 let numUsers = 0
-let Users = []
+let users = []
+let colors = []
+let bans = []
 
-io.on('connection', function (socket) {
-  ++numUsers
+watch(io, redis, numUsers, users, st, redispass, debbug)
 
-  debbug(st.mag('User') + ' ' + st.gre('online') + ' ' + st.yel('id') + ': ' + st.red(socket.id)  + ' total online: ' + st.cya(numUsers))
+if (pront.use) {
+  var rl = readline.createInterface(process.stdin, process.stdout)
+  rl.setPrompt(pront.prompt)
+  rl.prompt()
+}
+  /* Internal */
+  if(pront.use) {
+    readLine()
+  }
+  
+function readLine () {
+  rl.on('line', (line) => {
+    rl.prompt()
 
-  /**
-   * Redis
-   */
-  let r = redis.createClient({auth_pass: redispass})
+      // let data = {}
 
-  r.subscribe('messages')
-  r.subscribe('permissions')
-  r.subscribe('maintenance')
+      if(line.indexOf('/users') == 0) {
+        debbug('All users: ' + JSON.stringify(users))
+      }
 
- // r.subscribe('delmessage')
- // r.subscribe('editmessage')
- // r.subscribe('isTyping')
+      if(line.indexOf('/updateList') == 0) {
+        users.length = 0
+        debbug('Update sent.')
+        setTimeout(() => { io.emit('updateUsersList', true) }, 1000)
+      }
 
- socket.on('setUser',  function (obj) {
-    if (socket.id !== null) {
+      if(line.indexOf('/selectUser') == 0) {
+        let select = line.substring(11)
+        let user = users.filter(user => user.id == select)
+        debbug(user)
+      }
 
-      debbug('user updated, socket id: ' + socket.id + ' now is: ' + st.red(obj.id))
-
-      socket.id = obj.id
-/*
-      Users.push({
-        'id': obj.id,
-        'name': obj.name,
-        'stats': obj.stats,
-        'isTyping': false
-      })
-*/
-    }
+      if(line.indexOf('/debug') == 0) {
+        debbug('Mode Debug: ' + Debug)
+      }
+    }).on('close', () => {
+      debbug('stop Shutting down')
+      process.exit(0)
   })
-
-  r.on("message", function (channel, message) {
-    socket.emit(channel, message)
-    debbug('log: ' + channel + ' ' + message)
-  })
-
-  r.on("permissions", function (channel, message) {
-    socket.emit(channel, message)
-    debbug('log: ' + channel + ' ' + message)
-  })
-
-  r.on("maintenance", function (channel, message) {
-    socket.emit(channel, message)
-    debbug('log: ' + channel + ' ' + message)
-  })
-
-  socket.on("isTyping", function (message) {
-    io.emit("isTyping", message)
-    debbug('log: id: ' + socket.id + ' - ' + message)
-  })
-
-  socket.on("delmessage", function (channel, message) {
-    socket.emit(channel, message)
-    debbug('log: ' + message)
-  })
-
-  socket.on("editmessage", function (channel, message) {
-    socket.emit(channel, message)
-    debbug('log: ' + message)
-  })
-
-  socket.on("online", function (message) {
-    socket.emit(channel, message)
-    debbug('log: ' + message)
-  })
-
-  socket.on('disconnect',  function () {
-    if (numUsers !== 0) {
-      --numUsers
-      r.quit()
-    }
-    debbug('Client desconected id: ' + socket.id)
-  })
-
-})
+}

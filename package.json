@@ -7,6 +7,7 @@
     "express": "^4.16.2",
     "http": "0.0.0",
     "moment": "^2.19.3",
+    "readline": "^1.3.0",
     "redis": "^2.8.0",
     "socket.io": "^2.0.4",
     "styleme": "^2.5.4"
