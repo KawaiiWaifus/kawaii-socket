@@ -24,6 +24,29 @@ export const command = crazy => {
       if(line.indexOf('/debug') == 0) {
         debbug('Mode Debug: ' + Debug)
       }
+
+      /**
+       * Maintenance
+       */
+      if(line.indexOf('/down') == 0) {
+        debbug('Maintenance server down.')
+        let select = line.substring(5)
+        let date = select.split('date:')
+        let d = date[1].split(' ')
+        let m = select.split('message:')
+        
+        if (d[0] && m[1]) {
+          setTimeout(() => { io.emit('down', {date: d[0], message: m[1]}) }, 1000)
+        }
+        else {
+          debbug('🔥  Error, u need add date:time message:message.')
+        }
+      }
+      if(line.indexOf('/up') == 0) {
+        debbug('Server up.')
+        setTimeout(() => { io.emit('up', true) }, 1000)
+      }
+
     }).on('close', () => {
       debbug('stop Shutting down')
       process.exit(0)

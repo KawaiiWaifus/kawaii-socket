@@ -1,77 +1,124 @@
-export const watch = (io, redis, numUsers, users, st, redispass, debbug) => {
+export const watch = (io, Redis, numUsers, st, debbug) => {
 
   io.on('connection', (socket) => {
     ++numUsers
 
     debbug(st.mag('User') + ' ' + st.gre('online') + ' ' + st.yel('id') + ': ' + st.red(socket.id)  + ' total online: ' + st.cya(numUsers))
 
-    /**
-     * Redis
-     */
-    let r = redis.createClient({auth_pass: redispass})
+  /**
+  * Desconnect
+  */
+  socket.on('disconnect', async () => {
+      if (numUsers !== 0) {
+        --numUsers
+        Redis.db.hdel('users', socket.user_id)
+        let users = await Redis.db.hvalsAsync('users')
+        io.emit('setOnlineUsers', users)
+        // Redis.db.quit()
+      }
+      debbug('Client desconected id: ' + socket.id + ' user_id:' + socket.user_id)
+  })
 
-    r.subscribe('messages')
-    r.subscribe('permissions')
-    r.subscribe('maintenance')
+  socket.on('setUser', async (obj) => {
+      if (socket.id !== null && socket.id !== obj.id && obj.id) {
 
-  // r.subscribe('delmessage')
-  // r.subscribe('editmessage')
-  // r.subscribe('isTyping')
+        debbug(st.mag('User') + ', socket usr_id: ' + st.red(socket.id) + ' now is: ' + st.red(obj.id))
+        
+        if (!await Redis.db.hgetAsync('users', obj.id)) {
 
-  socket.on('setUser', (obj) => {
-      if (socket.id !== null) {
+            socket.user_id = obj.id
+            socket.userName = obj.name
+            socket.avatar = obj.avatar
+            socket.color_nick = obj.color_nick
+            socket.isTyping = false
+            socket.status = 1
 
-        debbug(st.mag('User') + ', socket id: ' + st.red(socket.id) + ' now is: ' + st.red(obj.id))
+            const USER_DATA = {
+              id: socket.user_id,
+              name: socket.userName,
+              avatar: socket.avatar,
+              color_nick: socket.color_nick,
+              isTyping: socket.isTyping,
+              status: Number(socket.status)
+            }
 
-        socket.id = obj.id
+            Redis.db.hset('users', socket.user_id, JSON.stringify(USER_DATA))
+        }
+        else {
 
-        users.push({id: obj.id, name: obj.name, isTyping: false})
+          let user = JSON.parse(await Redis.db.hgetAsync('users', obj.id))
+          socket.user_id = user.id
+          socket.userName = user.name
+          socket.avatar = user.avatar
+          socket.color_nick = user.color_nick
+          socket.isTyping = user.isTyping
+          socket.status = user.status
+        }
 
+        let users = await Redis.db.hvalsAsync('users')
+        socket.emit('setOnlineUsers', users)
       }
     })
 
-    r.on("message", (channel, message) => {
-      socket.emit(channel, message)
+    socket.on("messages", async (message) => {
+      Redis.db.hset('messages:' + 'global', message.id, JSON.stringify(message))
+      let messages = await Redis.db.hvalsAsync('messages:' + 'global')
+      io.emit('setMessages', messages)
+      debbug('log: new message: ' + message.id)
+    })
+
+    socket.on("getMessages", async (channel) => {
+      let messages = await Redis.db.hvalsAsync('messages:' + channel)
+      io.emit('setMessages', messages)
+      debbug('log: List all Messages')
+    })
+
+    Redis.db.on("permissions", (channel, message) => {
+      io.emit(channel, message)
       debbug('log: ' + channel + ' ' + message)
     })
 
-    r.on("permissions", (channel, message) => {
+    Redis.db.on("maintenance", (channel, message) => {
       socket.emit(channel, message)
       debbug('log: ' + channel + ' ' + message)
     })
-
-    r.on("maintenance", (channel, message) => {
-      socket.emit(channel, message)
-      debbug('log: ' + channel + ' ' + message)
+    
+    /**
+     * Set Typing true or false
+     */
+    socket.on("setTyping", (obj) => {
+      socket.isTyping = obj.isTyping
+      let data = {user_id: socket.user_id, isTyping: socket.isTyping}
+      io.emit('getTyping', data)
+      debbug('log: ' + socket.userName + ' is typing ' + socket.isTyping)
     })
 
-    socket.on("isTyping", (message) => {
-      io.emit("isTyping", message)
-      debbug('log: id: ' + socket.id + ' - ' + message)
+    socket.on("getOnlineUsers", async (channel) => {
+      let users = await Redis.db.hvalsAsync('users')
+      io.emit('setOnlineUsers', users)
+      debbug('log: Sent list all users online to chat')
     })
 
-    socket.on("delmessage", (channel, message) => {
-      socket.emit(channel, message)
-      debbug('log: ' + message)
-    })
+    socket.on("setStatus", (obj) => {
+      socket.status = obj.status
 
-    socket.on("editmessage", (channel, message) => {
-      socket.emit(channel, message)
-      debbug('log: ' + message)
+      Redis.db.hset('users', socket.user_id, JSON.stringify({
+        id: socket.user_id,
+        name: socket.userName,
+        avatar: socket.avatar,
+        color_nick: socket.color_nick,
+        isTyping: socket.isTyping,
+        status: socket.status
+      }))
+
+      let data = {user_id: socket.user_id, status: socket.status}
+      io.emit('getStatus', data)
+      debbug('log: ' + obj.status)
     })
 
     socket.on("online", (message) => {
       socket.emit(channel, message)
       debbug('log: ' + message)
     })
-
-    socket.on('disconnect',  () => {
-      if (numUsers !== 0) {
-        --numUsers
-        r.quit()
-      }
-      debbug('Client desconected id: ' + socket.id)
-    })
-
   })
 }

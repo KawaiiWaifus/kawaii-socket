@@ -6,14 +6,14 @@ export const st = require('styleme')
 const app = require('express')()
 const server = require('http').Server(app)
 export const io = require('socket.io')(server)
-export const redis = require('redis')
+export { Redis } from './redis'
 export const readline = require('readline')
 
 /**
  * CONFIGS
  */
 import { LogOn, port, version, Debug, serverName } from './config'
-export { redispass, pront, Debug } from './config'
+export { pront, Debug } from './config'
 
 /**
  * DEBUGS
