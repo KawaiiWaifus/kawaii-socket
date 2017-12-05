@@ -8,13 +8,13 @@ bluebird.promisifyAll(redisClient.Multi.prototype)
 const redis = redisClient.createClient({ port: redisPort, auth_pass: redisPass })
 
 class Redis {
-	static get db() {
+  static get db() {
 		return redis
 	}
 
-	static start () {
+  static start () {
 		redis.on('error', error => console.error(`[REDIS]: Encountered error: \n${error}`))
-			.on('reconnecting', () => console.warn('[REDIS]: Reconnecting...'))
+		  .on('reconnecting', () => console.warn('[REDIS]: Reconnecting...'))
 	}
 }
 
