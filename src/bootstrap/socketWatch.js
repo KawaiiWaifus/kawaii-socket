@@ -16,13 +16,13 @@ export const watch = (io, Redis, numUsers, st, debbug) => {
         io.emit('setOnlineUsers', users)
         // Redis.db.quit()
       }
-      debbug('Client desconected id: ' + socket.id + ' user_id:' + socket.user_id)
+      debbug(st.yel('User left socket-id: ' + socket.id + ' user-id: ' + socket.user_id))
   })
 
   socket.on('setUser', async (obj) => {
       if (socket.id !== null && socket.id !== obj.id && obj.id) {
 
-        debbug(st.mag('User') + ', socket usr_id: ' + st.red(socket.id) + ' now is: ' + st.red(obj.id))
+        debbug(st.mag('User') + ', socket-id: ' + st.red(socket.id) + ' now is: ' + st.red(obj.id))
         
         if (!await Redis.db.hgetAsync('users', obj.id)) {
 
